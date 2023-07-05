@@ -5,53 +5,50 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
-    private float horizontal;
-    private float speed = 5f;
-    private float jumpForce = 5f;
-    private bool isFacingRight = true;
+    private Rigidbody2D rb;
+    private SpriteRenderer sprite;
+    private Animator anim;
 
-    [SerializeField] private Rigidbody2D rb;
-    [SerializeField] private Transform groundCheck;
-    [SerializeField] private LayerMask whatIsGround;
+    private float horizontal = 0f;
 
+    private void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        sprite = GetComponent<SpriteRenderer>();
+        anim = GetComponent<Animator>();
+    }
 
-    // Update is called once per frame
     private void Update()
     {
         horizontal = Input.GetAxisRaw("Horizontal");
+        rb.velocity = new Vector2(horizontal * 5f, rb.velocity.y);
 
-        if(Input.GetButtonDown("Jump") && IsGrounded())
+        if(Input.GetButtonDown("Jump"))
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            rb.velocity = new Vector2(rb.velocity.x, 5f);
         }
 
-        if(Input.GetButtonUp("Jump") && rb.velocity.y > 0f)
+        UpdateAnimation();
+    }
+
+    private void UpdateAnimation()
+    {
+        if(horizontal > 0f)
         {
-            rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
+            anim.SetBool("isRunning", true);
+            sprite.flipX = false;
+        }
+        else if(horizontal < 0f)
+        {
+            anim.SetBool("isRunning", true);
+            sprite.flipX = true;
+        }
+        else
+        {
+            anim.SetBool("isRunning", false);
         }
 
-        Flip();
     }
 
-    private void FixedUpdate()
-    {
-        rb.velocity = new Vector2(horizontal * speed, rb.velocity.y);
 
-    }
-
-    private bool IsGrounded()
-    {
-        return Physics2D.OverlapCircle(groundCheck.position, 0.2f, whatIsGround);
-    }
-
-    private void Flip()
-    {
-        if(isFacingRight && horizontal < 0f || !isFacingRight && horizontal > 0f)
-        {
-            isFacingRight = !isFacingRight;
-            Vector3 localScale = transform.localScale;
-            localScale.x *= -1f;
-            transform.localScale = localScale;
-        }
-    }
 }
