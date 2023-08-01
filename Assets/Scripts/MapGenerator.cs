@@ -13,9 +13,12 @@ public class MapGenerator : MonoBehaviour
     public Tilemap tilemap;
     [SerializeField]
     public RuleTile ruleTile;
+    [SerializeField]
+    public GameObject playerPrefab;
 
     public string seed;
     public bool useRandomSeed;
+
 
     [Range(0f, 100f)]
     public int randomFillPercent;
@@ -26,15 +29,17 @@ public class MapGenerator : MonoBehaviour
     {
         Debug.Log("Start() called. useRandomSeed: " + useRandomSeed);
         GenerateMap();
+        Vector2 spawnPosition = FindSpawnPosition();
+        SpawnCharacter(spawnPosition);
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyUp(KeyCode.Space))
-        {
-            GenerateMap();
-        }
-    }
+    //private void Update()
+    //{
+    //    if (Input.GetKeyUp(KeyCode.Space))
+    //    {
+    //        GenerateMap();
+    //    }
+    //}
 
     void GenerateMap()
     {
@@ -255,6 +260,7 @@ public class MapGenerator : MonoBehaviour
         }
 
     }
+
 
     void DrawCircle(Coord c, int r)
     {
@@ -531,6 +537,34 @@ public class MapGenerator : MonoBehaviour
         public int CompareTo(Room other)
         {
             return other.roomSize.CompareTo(roomSize);
+        }
+    }
+
+    private Vector2 FindSpawnPosition()
+    {
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (map[x, y] == 0)
+                {
+                    return CoordToWorldPoint(new Coord(x, y));
+                }
+            }
+        }
+
+        return CoordToWorldPoint(new Coord(width / 2, height / 2));
+    }
+
+    void SpawnCharacter(Vector2 spawnPosition)
+    {
+        GameObject existingPlayer = GameObject.FindGameObjectWithTag("Player");
+        if (existingPlayer == null)
+        {
+            if (playerPrefab != null)
+            {
+                GameObject player = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+            }
         }
     }
 }
