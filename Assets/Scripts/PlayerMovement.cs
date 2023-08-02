@@ -10,6 +10,8 @@ public class PlayerMovement : MonoBehaviour
     private Animator anim;
 
     private float horizontal = 0f;
+    private float vertical = 0f;
+
 
     private void Start()
     {
@@ -23,7 +25,7 @@ public class PlayerMovement : MonoBehaviour
         horizontal = Input.GetAxisRaw("Horizontal");
         rb.velocity = new Vector2(horizontal * 5f, rb.velocity.y);
 
-        if(Input.GetButtonDown("Jump"))
+        if (Input.GetButtonDown("Jump"))
         {
             rb.velocity = new Vector2(rb.velocity.x, 5f);
         }
@@ -33,12 +35,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateAnimation()
     {
-        if(horizontal > 0f)
+        if (horizontal > 0f)
         {
             anim.SetBool("isRunning", true);
             sprite.flipX = false;
         }
-        else if(horizontal < 0f)
+        else if (horizontal < 0f)
         {
             anim.SetBool("isRunning", true);
             sprite.flipX = true;
@@ -48,7 +50,20 @@ public class PlayerMovement : MonoBehaviour
             anim.SetBool("isRunning", false);
         }
 
-    }
+        if (vertical > 0f)
+        {
+            anim.SetBool("isJumping", true);
+        }
+        else if (vertical < 0f)
+        {
+            anim.SetBool("isJumping", true);
+            sprite.flipX = true;
+        }
+        else
+        {
+            anim.SetBool("isJumping", false);
+        }
 
+    }
 
 }
