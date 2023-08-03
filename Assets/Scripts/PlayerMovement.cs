@@ -12,6 +12,12 @@ public class PlayerMovement : MonoBehaviour
     private float horizontal = 0f;
     private float vertical = 0f;
 
+    [SerializeField]
+    private float moveSpeed = 5f;
+    [SerializeField]
+    private float jumpForce = 5f;
+
+    private enum MovementState { idle, running, jetpack }
 
     private void Start()
     {
@@ -23,11 +29,11 @@ public class PlayerMovement : MonoBehaviour
     private void Update()
     {
         horizontal = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(horizontal * 5f, rb.velocity.y);
+        rb.velocity = new Vector2(horizontal * moveSpeed, rb.velocity.y);
 
         if (Input.GetButtonDown("Jump"))
         {
-            rb.velocity = new Vector2(rb.velocity.x, 5f);
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
         }
 
         UpdateAnimation();
@@ -35,34 +41,29 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateAnimation()
     {
+        MovementState state;
+
         if (horizontal > 0f)
         {
-            anim.SetBool("isRunning", true);
+            state = MovementState.running;
             sprite.flipX = false;
         }
         else if (horizontal < 0f)
         {
-            anim.SetBool("isRunning", true);
+            state = MovementState.running;
             sprite.flipX = true;
-        }
+        }       
         else
         {
-            anim.SetBool("isRunning", false);
+            state = MovementState.idle;
         }
 
-        if (vertical > 0f)
+        if (rb.velocity.y > .1f)
         {
-            anim.SetBool("isJumping", true);
+            state = MovementState.jetpack;
         }
-        else if (vertical < 0f)
-        {
-            anim.SetBool("isJumping", true);
-            sprite.flipX = true;
-        }
-        else
-        {
-            anim.SetBool("isJumping", false);
-        }
+
+        anim.SetInteger("state", (int)state);
 
     }
 

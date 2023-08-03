@@ -558,14 +558,11 @@ public class MapGenerator : MonoBehaviour
 
     void SpawnCharacter(Vector2 spawnPosition)
     {
-        GameObject existingPlayer = GameObject.FindGameObjectWithTag("Player");
-        if (existingPlayer == null)
-        {
-            if (playerPrefab != null)
-            {
-                GameObject player = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-            }
-        }
+        spawnPosition = FindSpawnPosition();
+
+         Instantiate(playerPrefab, spawnPosition, Quaternion.identity);          
+
+
     }
 }
 
