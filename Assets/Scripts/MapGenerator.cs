@@ -15,6 +15,8 @@ public class MapGenerator : MonoBehaviour
     public RuleTile ruleTile;
     [SerializeField]
     public GameObject playerPrefab;
+    [SerializeField]
+    public GameObject fuelCanister;
 
     public string seed;
     public bool useRandomSeed;
@@ -30,7 +32,9 @@ public class MapGenerator : MonoBehaviour
         Debug.Log("Start() called. useRandomSeed: " + useRandomSeed);
         GenerateMap();
         Vector2 spawnPosition = FindSpawnPosition();
+        Vector2 fuelSpawnPosition = FindEmptyPosition();
         SpawnCharacter(spawnPosition);
+        SpawnFuel(fuelSpawnPosition);
     }
 
     //private void Update()
@@ -556,13 +560,36 @@ public class MapGenerator : MonoBehaviour
         return CoordToWorldPoint(new Coord(width / 2, height / 2));
     }
 
+    private Vector2 FindEmptyPosition()
+    {
+        for (int i = 0; i < 100; i++)
+        {
+            int x = UnityEngine.Random.Range(0, width);
+            int y = UnityEngine.Random.Range(0, height);
+
+            if (map[x, y] == 0) { return CoordToWorldPoint(new Coord(x, y)); }
+        }
+
+        return CoordToWorldPoint(new Coord(width / 2, height / 2));
+    }
+
     void SpawnCharacter(Vector2 spawnPosition)
     {
         spawnPosition = FindSpawnPosition();
 
-         Instantiate(playerPrefab, spawnPosition, Quaternion.identity);          
+        Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
 
 
+    }
+
+    void SpawnFuel(Vector2 fuelSpawnPosition)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            fuelSpawnPosition = FindEmptyPosition();
+
+            Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
+        }
     }
 }
 
