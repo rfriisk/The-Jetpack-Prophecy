@@ -18,6 +18,9 @@ public class MapGenerator : MonoBehaviour
     [SerializeField]
     public GameObject fuelCanister;
 
+    [Range(1f, 10f)]
+    public int numbOfFuel;
+
     public string seed;
     public bool useRandomSeed;
 
@@ -584,7 +587,7 @@ public class MapGenerator : MonoBehaviour
 
     void SpawnFuel(Vector2 fuelSpawnPosition)
     {
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < numbOfFuel; i++)
         {
             fuelSpawnPosition = FindEmptyPosition();
 

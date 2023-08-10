@@ -485,6 +485,7 @@ MonoBehaviour:
   ruleTile: {fileID: 11400000, guid: c019ae8a2c739ca47a78d66b4889ea70, type: 2}
   playerPrefab: {fileID: 646276996387380346, guid: 6f2009d03f2085047ae2777a4ec56b8b, type: 3}
   fuelCanister: {fileID: 1846358186916786137, guid: 367dd072ea6231f4ebf1c696b887c01f, type: 3}
+  numbOfFuel: 7
   seed: 81
   useRandomSeed: 1
   randomFillPercent: 52
