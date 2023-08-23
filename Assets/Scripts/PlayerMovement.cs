@@ -5,12 +5,14 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    private Fuel fuel;
+    private MapGenerator mapGenerator;
+
     private Rigidbody2D rb;
     private SpriteRenderer sprite;
     private Animator anim;
 
     private float horizontal = 0f;
-    private float vertical = 0f;
 
     [SerializeField]
     private float moveSpeed = 5f;
@@ -24,6 +26,9 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sprite = GetComponent<SpriteRenderer>();
         anim = GetComponent<Animator>();
+
+        // Get the Fuel component from the player character
+        fuel = GetComponent<Fuel>();
     }
 
     private void Update()
@@ -33,7 +38,14 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetButtonDown("Jump"))
         {
-            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+              fuel.UseJetPack();
+              rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+
+            //if (fuel.currentFuel > 0)
+            //{
+            //    fuel.UseJetPack(fuel.currentFuel fuel.fuelConsumption);
+            //    rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            //}
         }
 
         UpdateAnimation();

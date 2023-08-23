@@ -578,11 +578,18 @@ public class MapGenerator : MonoBehaviour
 
     void SpawnCharacter(Vector2 spawnPosition)
     {
-        spawnPosition = FindSpawnPosition();
+        Transform playerTransform = playerPrefab.transform;
 
-        Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+        playerTransform.position = spawnPosition;
 
+        Debug.Log("Spawn position: " + spawnPosition);
 
+        //spawnPosition = FindSpawnPosition();
+
+        //if (playerPrefab != null)
+        //{
+        //    Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+        //}
     }
 
     void SpawnFuel(Vector2 fuelSpawnPosition)
@@ -590,8 +597,9 @@ public class MapGenerator : MonoBehaviour
         for (int i = 0; i < numbOfFuel; i++)
         {
             fuelSpawnPosition = FindEmptyPosition();
-
-            Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
+            GameObject fuel = Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
+            Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();            
+            //Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
         }
     }
 }
