@@ -584,12 +584,6 @@ public class MapGenerator : MonoBehaviour
 
         Debug.Log("Spawn position: " + spawnPosition);
 
-        //spawnPosition = FindSpawnPosition();
-
-        //if (playerPrefab != null)
-        //{
-        //    Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-        //}
     }
 
     void SpawnFuel(Vector2 fuelSpawnPosition)
