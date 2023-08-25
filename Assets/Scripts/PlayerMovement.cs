@@ -38,9 +38,12 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetButtonDown("Jump"))
         {
-              fuel.UseJetPack();
-              rb.velocity = new Vector2(rb.velocity.x, jumpForce);
 
+            if (fuel.currentFuel > 0)
+            {
+                fuel.UseJetPack();
+                rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            }
             //if (fuel.currentFuel > 0)
             //{
             //    fuel.UseJetPack(fuel.currentFuel fuel.fuelConsumption);
@@ -64,7 +67,7 @@ public class PlayerMovement : MonoBehaviour
         {
             state = MovementState.running;
             sprite.flipX = true;
-        }       
+        }
         else
         {
             state = MovementState.idle;

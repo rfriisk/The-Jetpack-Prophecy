@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -50,10 +51,7 @@ public class Fuel : MonoBehaviour
         if (currentFuel > 0) { currentFuel -= useFuel; }
 
         Debug.Log("Current fuel:" + currentFuel);
-        Debug.Log("Fuel used:" + fuelConsumption + " useFuel: " + useFuel);
-
-        //Debug.Log("Fuel used: " + useFuel);
-        //Debug.Log("Current fuel: " + currentFuel);
+        //Debug.Log("Fuel used:" + fuelConsumption + " useFuel: " + useFuel);
 
     }
 
@@ -79,11 +77,21 @@ public class Fuel : MonoBehaviour
             Destroy(collision.gameObject);
             fuelCanister++;
 
-            //Refuel();
+            // Add refillFuel to currentFuel
+            currentFuel += refillFuel;
+
+            // Ensuring currentFuel doesn´t exceed maxFuel
+            if (currentFuel > maxFuel)
+            {
+                currentFuel = maxFuel;
+            }
+
+            FuelBarFiller();
 
             Debug.Log("FuelCanister: " + fuelCanister);
         }
     }
+
 
     //private int fuelCanister = 0;
 
