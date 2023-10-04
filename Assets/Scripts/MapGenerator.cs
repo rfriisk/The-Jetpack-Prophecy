@@ -24,11 +24,16 @@ public class MapGenerator : MonoBehaviour
     public string seed;
     public bool useRandomSeed;
 
-
     [Range(0f, 100f)]
     public int randomFillPercent;
 
     int[,] map;
+
+    // For spawning fuel in rooms instead of randomly
+
+    List<Room> survivingRooms = new List<Room>();
+
+    List<Vector2> spawnedFuelPositions = new List<Vector2>();
 
     void Start()
     {
@@ -37,7 +42,10 @@ public class MapGenerator : MonoBehaviour
         Vector2 spawnPosition = FindSpawnPosition();
         Vector2 fuelSpawnPosition = FindEmptyPosition();
         SpawnCharacter(spawnPosition);
-        SpawnFuel(fuelSpawnPosition);
+
+        SpawnFuelInsideRooms(); // If not working replace with SpawnFuel(fuelSpawnPosition);
+
+        //SpawnFuel(fuelSpawnPosition);
     }
 
     //private void Update()
@@ -141,7 +149,8 @@ public class MapGenerator : MonoBehaviour
 
         // Size of room regions to be removed
         int roomThresholdSize = 50;
-        List<Room> survivingRooms = new List<Room>();
+        survivingRooms.Clear();
+        //List<Room> survivingRooms = new List<Room>();
 
         foreach (List<Coord> roomRegion in roomRegions)
         {
@@ -472,7 +481,11 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    class Room : IComparable<Room>
+    /// <summary>
+    /// Can be deleted in not working
+    /// </summary>
+
+    class Room : IComparable<Room> // Copy for finding center of room
     {
         public List<Coord> tiles;
         public List<Coord> edgeTiles;
@@ -545,7 +558,98 @@ public class MapGenerator : MonoBehaviour
         {
             return other.roomSize.CompareTo(roomSize);
         }
+
+        public Coord GetRoomCenter()
+        {
+            int sumX = 0, sumY = 0;
+
+            foreach (Coord tile in tiles)
+            {
+                sumX += tile.tileX;
+                sumY += tile.tileY;
+            }
+
+            int centerX = sumX / tiles.Count;
+            int centerY = sumY / tiles.Count;
+
+            return new Coord(centerX, centerY);
+        }
     }
+
+    //class Room : IComparable<Room>
+    //{
+    //    public List<Coord> tiles;
+    //    public List<Coord> edgeTiles;
+    //    public List<Room> connectedRooms;
+    //    public int roomSize;
+    //    public bool isAccessibleFromMainRoom;
+    //    public bool isMainRoom;
+
+    //    public Room()
+    //    {
+    //    }
+
+    //    public Room(List<Coord> roomTiles, int[,] map)
+    //    {
+    //        tiles = roomTiles;
+    //        roomSize = tiles.Count;
+    //        connectedRooms = new List<Room>();
+
+    //        edgeTiles = new List<Coord>();
+    //        foreach (Coord tile in tiles)
+    //        {
+    //            for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
+    //            {
+    //                for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
+    //                {
+    //                    if (x == tile.tileX || y == tile.tileY)
+    //                    {
+    //                        if (map[x, y] == 1)
+    //                        {
+    //                            edgeTiles.Add(tile);
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        }
+    //    }
+
+    //    public void SetAccessibleFromMainRoom()
+    //    {
+    //        if (!isAccessibleFromMainRoom)
+    //        {
+    //            isAccessibleFromMainRoom = true;
+    //            foreach (Room connectedRoom in connectedRooms)
+    //            {
+    //                connectedRoom.SetAccessibleFromMainRoom();
+    //            }
+    //        }
+    //    }
+
+    //    public static void ConnectRooms(Room roomA, Room roomB)
+    //    {
+    //        if (roomA.isAccessibleFromMainRoom)
+    //        {
+    //            roomB.SetAccessibleFromMainRoom();
+    //        }
+    //        else if (roomB.isAccessibleFromMainRoom)
+    //        {
+    //            roomA.SetAccessibleFromMainRoom();
+    //        }
+    //        roomA.connectedRooms.Add(roomB);
+    //        roomB.connectedRooms.Add(roomA);
+    //    }
+
+    //    public bool IsConnected(Room otherRoom)
+    //    {
+    //        return connectedRooms.Contains(otherRoom);
+    //    }
+
+    //    public int CompareTo(Room other)
+    //    {
+    //        return other.roomSize.CompareTo(roomSize);
+    //    }
+    //}
 
     private Vector2 FindSpawnPosition()
     {
@@ -586,15 +690,134 @@ public class MapGenerator : MonoBehaviour
 
     }
 
-    void SpawnFuel(Vector2 fuelSpawnPosition)
+    //void SpawnFuel(Vector2 fuelSpawnPosition) 
+    //{
+    //    for (int i = 0; i < numbOfFuel; i++)
+    //    {
+    //        fuelSpawnPosition = FindEmptyPosition();
+    //        GameObject fuel = Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
+    //        Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();
+    //        //Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
+    //    }
+    //}
+
+    ////////////////// New code below //////////////////
+
+    private void SpawnFuelInsideRooms()
     {
+        // List to track which rooms have been selected to avoid duplicating fuel in the same room
+        List<Room> selectedRooms = new List<Room>();
+
+
         for (int i = 0; i < numbOfFuel; i++)
         {
-            fuelSpawnPosition = FindEmptyPosition();
+            if (survivingRooms.Count == 0)
+            {
+                Debug.LogWarning("No surviving room left to spawn fuel in");
+                break;
+            }
+
+            int index = UnityEngine.Random.Range(0, survivingRooms.Count);
+            Room randomRoom = survivingRooms[index];
+
+            // Ensure not to spawn multiple fuels in the same room
+            while (selectedRooms.Contains(randomRoom))
+            {
+                randomRoom = survivingRooms[UnityEngine.Random.Range(0, survivingRooms.Count)];
+            }
+
+            selectedRooms.Add(randomRoom);
+            survivingRooms.RemoveAt(index); // remove this room from the list to reduce next check time.
+
+
+            // Get the center position of the room and spawn the fuel
+            Coord roomCenter = randomRoom.GetRoomCenter();
+            Vector2 fuelSpawnPosition = CoordToWorldPoint(roomCenter);
+
             GameObject fuel = Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
-            Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();            
-            //Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
+            Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();
         }
+
+        Debug.Log("SurvivingRooms: " + survivingRooms.Count);
     }
+
+    //private void SpawnFuelCanister()
+    //{
+    //    if (survivingRooms.Count < numbOfFuel)
+    //    {
+
+    //        Debug.Log("Not enough rooms to spawn fuel");
+    //        return;
+    //    }
+
+    //    // List to track which rooms have been selected to avoid duplicating fuel in the same room
+    //    List<Room> selectedRooms = new List<Room>();
+
+    //    for (int i = 0; i < numbOfFuel; i++)
+    //    {
+    //        Room randomRoom = survivingRooms[UnityEngine.Random.Range(0, survivingRooms.Count)];
+
+    //        // Ensure we don't spawn multiple fuels in the same room
+    //        while (selectedRooms.Contains(randomRoom))
+    //        {
+    //            randomRoom = survivingRooms[UnityEngine.Random.Range(0, survivingRooms.Count)];
+    //        }
+
+    //        selectedRooms.Add(randomRoom);
+
+    //        // Spawn fuel in the center of the selected room (can be adjusted to fit your needs)
+    //        Vector2 fuelSpawnPosition = FindEmptyPosition();
+    //        GameObject fuel = Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
+    //        Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();
+    //    }
+
+    //}
+
+
+    //void SpawnFuel(Vector2 fuelSpawnPosition)
+    //{
+    //    for (int i = 0; i < numbOfFuel; i++)
+    //    {
+    //        fuelSpawnPosition = FindDistantEmptyPosition();
+    //        GameObject fuel = Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
+    //        Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();
+    //        spawnedFuelPositions.Add(fuelSpawnPosition);
+    //    }
+    //}
+
+    //private Vector2 FindDistantEmptyPosition()
+    //{
+    //    const float minDistanceApart = 5.0f; // Minimum distance between fuel canisters, adjust as needed
+    //    Vector2 potentialPosition;
+
+    //    int maxAttempts = 500; // Maximum attempts to find a distant position to prevent infinite loops
+    //    int currentAttempt = 0;
+
+    //    do
+    //    {
+    //        potentialPosition = FindEmptyPosition();
+    //        currentAttempt++;
+
+    //        if (currentAttempt < maxAttempts)
+    //        {
+    //            Debug.Log("Max attempts reached, Spawning fuel canister even if close to another.");
+    //            break;
+    //        }
+    //    }
+
+    //    while (IsTooCloseToOthers(potentialPosition, minDistanceApart));
+
+    //    return potentialPosition;
+    //}
+
+    //private bool IsTooCloseToOthers(Vector2 position, float minimumDistance)
+    //{
+    //    foreach (Vector2 existingPosition in spawnedFuelPositions)
+    //    {
+    //        if (Vector2.Distance(position, existingPosition) < minimumDistance)
+    //            return true;
+    //    }
+    //    return false;
+    //}
 }
 

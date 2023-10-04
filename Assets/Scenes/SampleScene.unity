@@ -849,6 +849,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2601117427611302696, guid: 6f2009d03f2085047ae2777a4ec56b8b, type: 3}
+      propertyPath: fuelConsumption
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2601117427611302696, guid: 6f2009d03f2085047ae2777a4ec56b8b, type: 3}
       propertyPath: fuelPoints.Array.size
       value: 10
       objectReference: {fileID: 0}
