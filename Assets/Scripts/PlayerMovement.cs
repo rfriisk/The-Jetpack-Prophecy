@@ -29,6 +29,7 @@ public class PlayerMovement : MonoBehaviour
 
         // Get the Fuel component from the player character
         fuel = GetComponent<Fuel>();
+
     }
 
     private void Update()

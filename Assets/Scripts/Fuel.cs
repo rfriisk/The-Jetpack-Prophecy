@@ -1,9 +1,6 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Rendering.Universal;
 
 public class Fuel : MonoBehaviour
 {
@@ -21,9 +18,23 @@ public class Fuel : MonoBehaviour
 
     public Image[] fuelPoints;
 
+    private FuelManager fuelManager; // Reference to FuelManager.cs
+
+    // JetPack light
+    private Light2D jetPackLight;
+    private bool isJetPackActive = false;
+
     private void Start()
     {
         currentFuel = maxFuel;
+        jetPackLight = GetComponentInChildren<Light2D>();
+
+        // Initialize FuelManager reference
+        fuelManager = FindObjectOfType<FuelManager>();
+        if (fuelManager == null)
+        {
+            Debug.LogError("FuelManager not found in the scene.");
+        }
     }
 
     private void Update()
@@ -31,6 +42,19 @@ public class Fuel : MonoBehaviour
         if (currentFuel > maxFuel) { currentFuel = maxFuel; }
 
         FuelBarFiller();
+
+        if (Input.GetButtonUp("Jump"))
+        {
+            isJetPackActive = false;
+            jetPackLight.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+            jetPackLight.intensity = 0.53f;
+        }
+
+        if (isJetPackActive)
+        {
+            JetPackLight();
+        }
+
     }
 
     public void UseJetPack()
@@ -38,8 +62,9 @@ public class Fuel : MonoBehaviour
         if (currentFuel >= fuelConsumption)
         {
             ConsumeFuel(fuelConsumption);
+            isJetPackActive = true;
             Debug.Log("Consumed fuel: " + fuelConsumption);
-        } 
+        }
         else
         {
             Debug.Log("No fuel");
@@ -51,7 +76,6 @@ public class Fuel : MonoBehaviour
         if (currentFuel > 0) { currentFuel -= useFuel; }
 
         Debug.Log("Current fuel:" + currentFuel);
-        //Debug.Log("Fuel used:" + fuelConsumption + " useFuel: " + useFuel);
 
     }
 
@@ -80,7 +104,7 @@ public class Fuel : MonoBehaviour
             // Add refillFuel to currentFuel
             currentFuel += refillFuel;
 
-            // Ensuring currentFuel doesn´t exceed maxFuel
+            // Ensuring currentFuel doesnï¿½t exceed maxFuel
             if (currentFuel > maxFuel)
             {
                 currentFuel = maxFuel;
@@ -88,97 +112,43 @@ public class Fuel : MonoBehaviour
 
             FuelBarFiller();
 
+            if (fuelManager != null)
+            {
+                fuelManager.UpdateFuelCollected(fuelCanister);
+            }
+            else
+            {
+                Debug.LogError("FuelManager is null");
+            }
+
             Debug.Log("FuelCanister: " + fuelCanister);
         }
     }
 
+    private void JetPackLight()
+    {
 
-    //private int fuelCanister = 0;
+        if (jetPackLight != null && isJetPackActive && currentFuel > 0)
+        {
+            // Randomize the intensity of the light between a min and max range
+            float intensity = UnityEngine.Random.Range(0.5f, 1.5f);
+            jetPackLight.intensity = intensity;
 
-    //[SerializeField]
-    //public float currentFuel, maxFuel = 100f;
-    //[SerializeField]
-    //public float fuelConsumption = 10f;
-    //[SerializeField]
-    //public float refillFuel;
+            // Optionally, change the color slightly to simulate fire
+            float r = UnityEngine.Random.Range(0.8f, 1f); // Red
+            float g = UnityEngine.Random.Range(0.4f, 0.6f); // Green
+            float b = UnityEngine.Random.Range(0.1f, 0.3f); // Blue
 
-    //public Image[] fuelPoints;
+            jetPackLight.color = new Color(r, g, b);
+            jetPackLight.enabled = true;
+        }
+        else if (jetPackLight != null)
+        {
+            jetPackLight.enabled = false;
+        }
 
-    //void Start()
-    //{
-    //    currentFuel = maxFuel;
-    //}
+    }
 
-    //void Update()
-    //{
-    //    if (currentFuel > maxFuel) { currentFuel = maxFuel; }
-
-    //    FuelBarFiller();
-    //}
-
-    //public void UseJetPack(float amount)
-    //{
-    //    ConsumeFuel(amount);
-    //    Debug.Log("Consumed Fuel amount: " + amount);
-    //}
-
-    //void ConsumeFuel(float useFuel)
-    //{
-    //    if (currentFuel < maxFuel) { currentFuel -= useFuel; }
-    //    //currentFuel = (int)Mathf.Clamp(currentFuel - fuelConsumption, 0f, maxFuel);
-    //    Debug.Log("Current fuel:" + currentFuel);
-    //    Debug.Log("Fuel used:" + fuelConsumption + " useFuel: " + useFuel);
-
-    //    //UpdateFuelPointsDisplay();
-
-    //}
-
-
-    //void Refuel(float getFuel)
-    //{
-    //    if (currentFuel < maxFuel) { currentFuel += getFuel; }
-
-    //    currentFuel = Mathf.Clamp(currentFuel + refillFuel, 0f, maxFuel);
-
-    //    Debug.Log("(Refuel) Current fuel: " + currentFuel);
-
-    //    UpdateFuelPointsDisplay();
-    //}
-    //void FuelBarFiller()
-    //{
-    //    for (int i = 0; i < fuelPoints.Length; i++)
-    //    {
-    //        fuelPoints[i].enabled = !DisplayFuelPoints(currentFuel, i);
-    //    }
-    //}
-
-    //bool DisplayFuelPoints(float _fuel, int pointNumb)
-    //{
-    //    return ((pointNumb * 10) >= _fuel);
-    //}
-
-    //void UpdateFuelPointsDisplay()
-    //{
-    //    float fuelRatio = currentFuel / maxFuel;
-    //    int pointsToDisplay = Mathf.CeilToInt(fuelPoints.Length * fuelRatio);
-
-    //    for(int i = 0; i < fuelPoints.Length; i++)
-    //    {
-    //        fuelPoints[i].enabled = i > pointsToDisplay;
-    //    }
-
-    //}
-
-    //private void OnTriggerEnter2D(Collider2D collision)
-    //{
-    //    if (collision.gameObject.CompareTag("FuelCanister"))
-    //    {
-    //        Destroy(collision.gameObject);
-    //        fuelCanister++;
-
-    //        //Refuel();
-
-    //        Debug.Log("FuelCanister: " +  fuelCanister);
-    //    }
-    //}
 }
+
+

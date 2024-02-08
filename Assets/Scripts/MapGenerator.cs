@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -43,18 +44,8 @@ public class MapGenerator : MonoBehaviour
         Vector2 fuelSpawnPosition = FindEmptyPosition();
         SpawnCharacter(spawnPosition);
 
-        SpawnFuelInsideRooms(); // If not working replace with SpawnFuel(fuelSpawnPosition);
-
-        //SpawnFuel(fuelSpawnPosition);
+        SpawnFuelInsideRooms();
     }
-
-    //private void Update()
-    //{
-    //    if (Input.GetKeyUp(KeyCode.Space))
-    //    {
-    //        GenerateMap();
-    //    }
-    //}
 
     void GenerateMap()
     {
@@ -481,10 +472,6 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Can be deleted in not working
-    /// </summary>
-
     class Room : IComparable<Room> // Copy for finding center of room
     {
         public List<Coord> tiles;
@@ -576,81 +563,6 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    //class Room : IComparable<Room>
-    //{
-    //    public List<Coord> tiles;
-    //    public List<Coord> edgeTiles;
-    //    public List<Room> connectedRooms;
-    //    public int roomSize;
-    //    public bool isAccessibleFromMainRoom;
-    //    public bool isMainRoom;
-
-    //    public Room()
-    //    {
-    //    }
-
-    //    public Room(List<Coord> roomTiles, int[,] map)
-    //    {
-    //        tiles = roomTiles;
-    //        roomSize = tiles.Count;
-    //        connectedRooms = new List<Room>();
-
-    //        edgeTiles = new List<Coord>();
-    //        foreach (Coord tile in tiles)
-    //        {
-    //            for (int x = tile.tileX - 1; x <= tile.tileX + 1; x++)
-    //            {
-    //                for (int y = tile.tileY - 1; y <= tile.tileY + 1; y++)
-    //                {
-    //                    if (x == tile.tileX || y == tile.tileY)
-    //                    {
-    //                        if (map[x, y] == 1)
-    //                        {
-    //                            edgeTiles.Add(tile);
-    //                        }
-    //                    }
-    //                }
-    //            }
-    //        }
-    //    }
-
-    //    public void SetAccessibleFromMainRoom()
-    //    {
-    //        if (!isAccessibleFromMainRoom)
-    //        {
-    //            isAccessibleFromMainRoom = true;
-    //            foreach (Room connectedRoom in connectedRooms)
-    //            {
-    //                connectedRoom.SetAccessibleFromMainRoom();
-    //            }
-    //        }
-    //    }
-
-    //    public static void ConnectRooms(Room roomA, Room roomB)
-    //    {
-    //        if (roomA.isAccessibleFromMainRoom)
-    //        {
-    //            roomB.SetAccessibleFromMainRoom();
-    //        }
-    //        else if (roomB.isAccessibleFromMainRoom)
-    //        {
-    //            roomA.SetAccessibleFromMainRoom();
-    //        }
-    //        roomA.connectedRooms.Add(roomB);
-    //        roomB.connectedRooms.Add(roomA);
-    //    }
-
-    //    public bool IsConnected(Room otherRoom)
-    //    {
-    //        return connectedRooms.Contains(otherRoom);
-    //    }
-
-    //    public int CompareTo(Room other)
-    //    {
-    //        return other.roomSize.CompareTo(roomSize);
-    //    }
-    //}
-
     private Vector2 FindSpawnPosition()
     {
         for (int x = 0; x < width; x++)
@@ -669,16 +581,26 @@ public class MapGenerator : MonoBehaviour
 
     private Vector2 FindEmptyPosition()
     {
-        for (int i = 0; i < 100; i++)
-        {
-            int x = UnityEngine.Random.Range(0, width);
-            int y = UnityEngine.Random.Range(0, height);
+        // Hashset
+        HashSet<Coord> emptyPositions = new HashSet<Coord>();
 
-            if (map[x, y] == 0) { return CoordToWorldPoint(new Coord(x, y)); }
+        // Find all the empty tiles
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                if (map[x, y] == 0)
+                {
+                    emptyPositions.Add(new Coord(x, y));
+                }
+            }
         }
 
-        return CoordToWorldPoint(new Coord(width / 2, height / 2));
+        Coord emptyPosition = emptyPositions.ElementAtOrDefault(UnityEngine.Random.Range(0, emptyPositions.Count));
+
+        return CoordToWorldPoint(emptyPosition);
     }
+
 
     void SpawnCharacter(Vector2 spawnPosition)
     {
@@ -690,134 +612,68 @@ public class MapGenerator : MonoBehaviour
 
     }
 
-    //void SpawnFuel(Vector2 fuelSpawnPosition) 
-    //{
-    //    for (int i = 0; i < numbOfFuel; i++)
-    //    {
-    //        fuelSpawnPosition = FindEmptyPosition();
-    //        GameObject fuel = Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
-    //        Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();
-    //        //Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
-    //    }
-    //}
-
-    ////////////////// New code below //////////////////
 
     private void SpawnFuelInsideRooms()
     {
         // List to track which rooms have been selected to avoid duplicating fuel in the same room
         List<Room> selectedRooms = new List<Room>();
 
+        // Initialize a counter for spawned fuel canisters.
+        int fuelSpawned = 0;
 
-        for (int i = 0; i < numbOfFuel; i++)
+        // Iterate over the surviving rooms and spawn fuel in each room
+    foreach (Room room in survivingRooms)
+    {
+        // Get a random position inside the room
+        Coord randomPosition = room.tiles[UnityEngine.Random.Range(0, room.tiles.Count)];
+
+        // Check if the position is an empty space (map value is 0)
+        if (map[randomPosition.tileX, randomPosition.tileY] == 0)
         {
-            if (survivingRooms.Count == 0)
-            {
-                Debug.LogWarning("No surviving room left to spawn fuel in");
-                break;
-            }
-
-            int index = UnityEngine.Random.Range(0, survivingRooms.Count);
-            Room randomRoom = survivingRooms[index];
-
-            // Ensure not to spawn multiple fuels in the same room
-            while (selectedRooms.Contains(randomRoom))
-            {
-                randomRoom = survivingRooms[UnityEngine.Random.Range(0, survivingRooms.Count)];
-            }
-
-            selectedRooms.Add(randomRoom);
-            survivingRooms.RemoveAt(index); // remove this room from the list to reduce next check time.
-
-
             // Get the center position of the room and spawn the fuel
-            Coord roomCenter = randomRoom.GetRoomCenter();
-            Vector2 fuelSpawnPosition = CoordToWorldPoint(roomCenter);
+            Vector2 fuelSpawnPosition = CoordToWorldPoint(randomPosition);
 
             GameObject fuel = Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
             Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();
+
+            fuelSpawned++;
+        }
+    }
+
+
+        // Ensure two fuels are not spawned in the same room
+        while (selectedRooms.Count < numbOfFuel && survivingRooms.Count > 0)
+        {
+            // Randomly select a room
+            Room randomRoom = survivingRooms[UnityEngine.Random.Range(0, survivingRooms.Count)];
+
+            // Check if the room is already in the selected rooms list
+            while (selectedRooms.Contains(randomRoom))
+            {
+                // Select a new room
+                randomRoom = survivingRooms[UnityEngine.Random.Range(0, survivingRooms.Count)];
+
+                // Break point to prevent infinite loop
+                break;
+            }
+            selectedRooms.Add(randomRoom);
+        }
+
+        // After spawning all fuel canisters, update the FuelManager.
+        FuelManager fuelManager = FindObjectOfType<FuelManager>();
+        if (fuelManager != null)
+        {
+            fuelManager.UpdateTotalFuelSpawned(fuelSpawned);
+        }
+        else
+        {
+            Debug.LogError("FuelManager not found in the scene.");
         }
 
         Debug.Log("SurvivingRooms: " + survivingRooms.Count);
+
     }
 
-    //private void SpawnFuelCanister()
-    //{
-    //    if (survivingRooms.Count < numbOfFuel)
-    //    {
 
-    //        Debug.Log("Not enough rooms to spawn fuel");
-    //        return;
-    //    }
-
-    //    // List to track which rooms have been selected to avoid duplicating fuel in the same room
-    //    List<Room> selectedRooms = new List<Room>();
-
-    //    for (int i = 0; i < numbOfFuel; i++)
-    //    {
-    //        Room randomRoom = survivingRooms[UnityEngine.Random.Range(0, survivingRooms.Count)];
-
-    //        // Ensure we don't spawn multiple fuels in the same room
-    //        while (selectedRooms.Contains(randomRoom))
-    //        {
-    //            randomRoom = survivingRooms[UnityEngine.Random.Range(0, survivingRooms.Count)];
-    //        }
-
-    //        selectedRooms.Add(randomRoom);
-
-    //        // Spawn fuel in the center of the selected room (can be adjusted to fit your needs)
-    //        Vector2 fuelSpawnPosition = FindEmptyPosition();
-    //        GameObject fuel = Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
-    //        Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();
-    //    }
-
-    //}
-
-
-    //void SpawnFuel(Vector2 fuelSpawnPosition)
-    //{
-    //    for (int i = 0; i < numbOfFuel; i++)
-    //    {
-    //        fuelSpawnPosition = FindDistantEmptyPosition();
-    //        GameObject fuel = Instantiate(fuelCanister, fuelSpawnPosition, Quaternion.identity);
-    //        Fuel fuelCanisterScript = fuel.GetComponent<Fuel>();
-    //        spawnedFuelPositions.Add(fuelSpawnPosition);
-    //    }
-    //}
-
-    //private Vector2 FindDistantEmptyPosition()
-    //{
-    //    const float minDistanceApart = 5.0f; // Minimum distance between fuel canisters, adjust as needed
-    //    Vector2 potentialPosition;
-
-    //    int maxAttempts = 500; // Maximum attempts to find a distant position to prevent infinite loops
-    //    int currentAttempt = 0;
-
-    //    do
-    //    {
-    //        potentialPosition = FindEmptyPosition();
-    //        currentAttempt++;
-
-    //        if (currentAttempt < maxAttempts)
-    //        {
-    //            Debug.Log("Max attempts reached, Spawning fuel canister even if close to another.");
-    //            break;
-    //        }
-    //    }
-
-    //    while (IsTooCloseToOthers(potentialPosition, minDistanceApart));
-
-    //    return potentialPosition;
-    //}
-
-    //private bool IsTooCloseToOthers(Vector2 position, float minimumDistance)
-    //{
-    //    foreach (Vector2 existingPosition in spawnedFuelPositions)
-    //    {
-    //        if (Vector2.Distance(position, existingPosition) < minimumDistance)
-    //            return true;
-    //    }
-    //    return false;
-    //}
 }
 
