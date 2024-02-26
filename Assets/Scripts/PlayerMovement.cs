@@ -20,6 +20,9 @@ public class PlayerMovement : MonoBehaviour
     private float jumpForce = 5f;
 
     private enum MovementState { idle, running, jetpack }
+    
+    [SerializeField]
+    private AudioSource jetPackSound;
 
     private void Start()
     {
@@ -44,6 +47,7 @@ public class PlayerMovement : MonoBehaviour
             {
                 fuel.UseJetPack();
                 rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+                jetPackSound.Play();
             }
             //if (fuel.currentFuel > 0)
             //{
