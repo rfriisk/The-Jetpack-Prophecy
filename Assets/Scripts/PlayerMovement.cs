@@ -42,18 +42,12 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetButtonDown("Jump"))
         {
-
             if (fuel.currentFuel > 0)
             {
                 fuel.UseJetPack();
                 rb.velocity = new Vector2(rb.velocity.x, jumpForce);
                 jetPackSound.Play();
             }
-            //if (fuel.currentFuel > 0)
-            //{
-            //    fuel.UseJetPack(fuel.currentFuel fuel.fuelConsumption);
-            //    rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-            //}
         }
 
         UpdateAnimation();
